@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy Halloween — from Rudy Parra</title>
+  <meta name="theme-color" content="#0b0b12" />
+  <meta name="description" content="A spooky Trick-or-Treat greeting from Rudy Parra." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b12;
+      --fg: #e6e6ea;
+      --accent: #ff6b00; /* pumpkin */
+      --accent-2: #7c3aed; /* purple */
+      --card: rgba(255,255,255,0.03);
+      --glass: rgba(0,0,0,0.55);
+      --ok: #22c55e;
+      --warn: #f97316;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--fg);
+      background: radial-gradient(1200px 600px at 70% -10%, #1b1327 0%, var(--bg) 60%),
+                  radial-gradient(900px 400px at -10% 20%, #142016 0%, transparent 60%),
+                  radial-gradient(600px 300px at 110% 80%, #1e1420 0%, transparent 60%),
+                  var(--bg);
+      overflow-x: hidden;
+    }
+    .wrap {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 780px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .title {
+      font-family: Creepster, Inter, system-ui, sans-serif;
+      font-size: clamp(36px, 8vw, 68px);
+      line-height: 1;
+      margin: 12px 0 8px;
+      text-align: center;
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(255,107,0,0.35);
+    }
+    .subtitle { text-align: center; opacity: 0.9; margin-bottom: 24px; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .btn {
+      appearance: none; border: none; cursor: pointer; padding: 16px 18px;
+      font-size: 18px; font-weight: 600; border-radius: 14px; color: #111;
+      transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .btn:active { transform: translateY(1px) scale(0.99); }
+    .btn.trick { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+    .btn.treat { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; box-shadow: 0 8px 24px rgba(124,58,237,0.35); }
+
+    .footer { text-align: center; font-size: 12px; opacity: 0.7; margin-top: 18px; }
+
+    /* Floating pumpkins / bats */
+    .floaty { position: absolute; opacity: 0.12; filter: blur(0.3px); }
+    .p1 { left: -20px; top: -10px; font-size: 80px; animation: drift 18s linear infinite; }
+    .p2 { right: 10px; top: -16px; font-size: 64px; animation: drift 22s linear infinite reverse; }
+    .p3 { left: 50%; bottom: -10px; transform: translateX(-50%); font-size: 96px; animation: drift 26s linear infinite; }
+    @keyframes drift { 0% { transform: translateX(0) translateY(0) rotate(0); } 50% { transform: translateX(10px) translateY(-8px) rotate(3deg); } 100% { transform: translateX(0) translateY(0) rotate(0); } }
+
+    /* Modal */
+    .modal {
+      position: fixed; inset: 0; display: none; place-items: center; padding: 20px;
+      backdrop-filter: blur(2px);
+      background: radial-gradient(600px 300px at center, rgba(0,0,0,0.7), rgba(0,0,0,0.85));
+      z-index: 60;
+    }
+    .modal.show { display: grid; }
+    .modal-box { width: 100%; max-width: 640px; background: var(--glass); color: var(--fg);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    .modal-title { font-weight: 700; font-size: 20px; margin: 0 0 8px; }
+    .modal-msg { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; opacity: 0.95; }
+    .dots::after { content: ''; display: inline-block; width: 1ch; animation: dots 1.2s steps(4,end) infinite; }
+    @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+    .ok { color: var(--ok); font-weight: 700; }
+    .warn { color: var(--warn); font-weight: 700; }
+    .close { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; background: rgba(255,255,255,0.06); color: var(--fg); cursor: pointer; }
+
+    /* Map modal */
+    .map-wrap { position: relative; width: 100%; height: 0; padding-bottom: 65%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18); background: #0e0e14; }
+    .map-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    @media (max-width: 420px) {
+      .btn { font-size: 16px; padding: 14px 16px; }
+      .subtitle { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="floaty p1">🎃</div>
+      <div class="floaty p2">🦇</div>
+      <div class="floaty p3">👻</div>
+
+      <h1 class="title">Happy Halloween<br/>from Rudy Parra</h1>
+      <p class="subtitle">Pick your fate.</p>
+
+      <div class="btns">
+        <button class="btn trick" id="trickBtn" aria-label="Trick">🎭 Trick</button>
+        <button class="btn treat" id="treatBtn" aria-label="Treat">🍬 Treat</button>
+      </div>
+
+      <p class="footer">No data is collected. This is a harmless prank.</p>
+    </div>
+  </div>
+
+  <!-- Trick modal -->
+  <div class="modal" id="trickModal" role="dialog" aria-modal="true" aria-labelledby="trickTitle">
+    <div class="modal-box">
+      <h2 class="modal-title" id="trickTitle">System Notice</h2>
+      <p class="modal-msg"><span class="warn">now sending all your data to Rudy Parra</span><span class="dots" aria-hidden="true"></span></p>
+      <button class="close" id="trickClose" style="display:none">Close</button>
+    </div>
+  </div>
+
+  <!-- Treat modal with embedded map -->
+  <div class="modal" id="treatModal" role="dialog" aria-modal="true" aria-labelledby="treatTitle">
+    <div class="modal-box">
+      <h2 class="modal-title" id="treatTitle">Treats Near You</h2>
+      <div class="map-wrap" aria-label="Halloween Map">
+        <!-- Responsive embed of your custom Google My Maps -->
+        <iframe src="https://www.google.com/maps/d/embed?mid=1SSQ78PUjHgqx0MVho1ZQ1MTlwqDm17r-&ehbc=2E312F" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <button class="close" id="treatClose">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const trickBtn = document.getElementById('trickBtn');
+    const treatBtn = document.getElementById('treatBtn');
+    const trickModal = document.getElementById('trickModal');
+    const treatModal = document.getElementById('treatModal');
+    const trickClose = document.getElementById('trickClose');
+
+    // Accessibility helpers
+    function trapFocus(modal) {
+      const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if(!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      function handle(e){
+        if(e.key !== 'Tab') return;
+        if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+      }
+      modal.addEventListener('keydown', handle);
+      first.focus();
+    }
+
+    trickBtn.addEventListener('click', () => {
+      trickModal.classList.add('show');
+      trapFocus(trickModal);
+      const msg = trickModal.querySelector('.modal-msg');
+      trickClose.style.display = 'none';
+
+      // Scare phase (~3 seconds)
+      setTimeout(() => {
+        msg.innerHTML = '<span class="ok">JUST KIDDING — YOU\'VE BEEN TRICKED 🎃</span>';
+        trickClose.style.display = 'inline-flex';
+        trickClose.focus();
+      }, 3000);
+    });
+
+    trickClose.addEventListener('click', () => {
+      trickModal.classList.remove('show');
+    });
+
+    // Also close trick modal by clicking outside the box
+    trickModal.addEventListener('click', (e) => {
+      if(e.target === trickModal) trickModal.classList.remove('show');
+    });
+
+    // Treat opens the embedded map in a modal for mobile-friendly viewing
+    treatBtn.addEventListener('click', () => {
+      treatModal.classList.add('show');
+      trapFocus(treatModal);
+    });
+
+    document.getElementById('treatClose').addEventListener('click', () => {
+      treatModal.classList.remove('show');
+    });
+
+    treatModal.addEventListener('click', (e) => {
+      if(e.target === treatModal) treatModal.classList.remove('show');
+    });
+  </script>
+</body>
+</html>
