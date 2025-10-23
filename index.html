@@ -581,19 +581,19 @@ function runAITrick() {
       runAITrick,
       runPumpkinTrick,
       runStaticTrick,
-      runCursorJailbreakTrick,
-      runButtonDodgeTrick,
+      //runCursorJailbreakTrick,
+      //runButtonDodgeTrick,
       runOsUpdateTrick,
       runScreenFlipTrick,
       runInvertFlashTrick,
       runWindowShakeTrick,
-      runGhostPassTrick,
-      runFakeQRTrick,
-      runConfettiTrick,
+      //runGhostPassTrick,
+      //runFakeQRTrick,
+      //runConfettiTrick,
       runBatterySpoofTrick,
       runSplitGlitchTrick,
       runCountdownTrick
-    ];
+    ].filter(Boolean);
     // Helpers for variants
     const isTouch = () => matchMedia('(pointer: coarse)').matches;
     function makeOverlay(innerHTML) {
