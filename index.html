@@ -173,7 +173,7 @@
 
     /* Bats background */
     .bats { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-    .bats .bat { position: absolute; top: -40px; font-size: clamp(24px,6vw,44px); opacity:.75; animation: bat-fly linear infinite; }
+    .bats .bat { position: absolute; top: -40px; font-size: clamp(24px,6vw,44px); opacity:.75; animation: bat-fly linear infinite; animation-direction: reverse; }
     @keyframes bat-fly { from { transform: translateX(-10vw) translateY(0); } to { transform: translateX(110vw) translateY(6vh); } }
     .bat.b1 { left: -10vw; animation-duration: 8s; }
     .bat.b2 { left: -14vw; animation-duration: 10s; animation-delay: .8s; top: 8vh; }
@@ -189,7 +189,6 @@
 
     @media (max-width: 420px) {
       .btn { font-size: 16px; padding: 14px 16px; }
-      .subtitle { font-size: 16px; }
     }
 
     /* Rickroll responsive embed */
