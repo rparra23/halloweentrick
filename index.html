@@ -148,7 +148,7 @@
     /* Rickroll responsive embed */
     .rick { margin-top:14px; }
     .rick-embed { position: relative; width:100%; padding-top:56.25%; border-radius:10px; overflow:hidden; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
-    .rick-embed iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .rick-embed iframe, .rick-embed video { position:absolute; inset:0; width:100%; height:100%; border:0; }
   </style>
 </head>
 <body>
@@ -192,17 +192,7 @@
         <div class="error-flash" id="errorFlash" aria-hidden="true"></div>
         <div class="rick" id="rick" style="display:none">
           <div class="rick-embed">
-            <iframe
-              id="rickFrame"
-              width="560"
-              height="315"
-              src="https://www.youtube.com/embed/Aq5WXmQQooo?si=nodfs-acdv90oKhx&autoplay=1&enablejsapi=1&playsinline=1"
-              title="YouTube video player"
-              frameborder="0"
-              allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen
-            ></iframe>
+            <video id="rickVideo" src="v0f025gc0000cgmed4rc77ubta66o2p0.MP4" playsinline controls style="display:none"></video>
           </div>
         </div>
       </div>
@@ -355,13 +345,22 @@
                 trickCloseEl.style.display = 'inline-flex';
                 trickCloseEl.focus();
                 const rick = document.getElementById('rick');
-                if (rick) rick.style.display = 'block';
-                const rickFrame = document.getElementById('rickFrame');
-                if (rickFrame && rickFrame.contentWindow) {
-                  try {
-                    rickFrame.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:''}), '*');
-                    rickFrame.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:''}), '*');
-                  } catch (e) { /* no-op */ }
+                if (rick) {
+                    rick.style.display = 'block';
+                    const rickVideo = document.getElementById('rickVideo');
+                    if (rickVideo) {
+                        try {
+                            setTimeout(() => {
+                                rickVideo.style.display = 'block';
+                                rickVideo.currentTime = 0;
+                                rickVideo.muted = false;
+                                rickVideo.volume = 1.0;
+                                rickVideo.play().catch(() => {
+                                    console.warn('Autoplay blocked; user interaction required.');
+                                });
+                            }, 600); // small delay to make sure the player is visible
+                        } catch (e) { /* no-op */ }
+                    }
                 }
               }, 900);
             }, 550);
