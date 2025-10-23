@@ -54,8 +54,8 @@
     .card { width: 100%; max-width: none; background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; position: relative; overflow: visible; }
     .title {
       font-family: Creepster, Inter, system-ui, sans-serif;
-      font-size: clamp(36px, 8vw, 68px);
-      line-height: 1;
+      font-size: clamp(44px, 14vw, 140px);
+      line-height: 0.9;
       margin: 12px 0 8px;
       text-align: center;
       color: var(--accent);
@@ -66,7 +66,7 @@
       -webkit-font-smoothing: antialiased; /* crisper rendering */
       text-rendering: optimizeLegibility;
     }
-    .subtitle { text-align: center; opacity: 0.9; margin-bottom: 24px; font-size: clamp(18px, 3.5vw, 28px); }
+    .subtitle { text-align: center; opacity: 0.95; margin: 16px 0 10px; font-size: clamp(22px, 4.8vw, 36px); animation: pulse 1.2s ease-in-out infinite; }
     .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .btn {
       appearance: none; border: none; cursor: pointer; padding: 16px 18px;
@@ -168,7 +168,7 @@
     #tapStart { text-align:center; margin:16px 0 6px; font-weight:700; letter-spacing:.5px; opacity:.85; animation:pulse 1.2s ease-in-out infinite; }
     @keyframes fadeUp { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:none;} }
     @keyframes pulse { 0%{opacity:.45} 50%{opacity:1} 100%{opacity:.45} }
-    .btns { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+    .btns { opacity: 1; pointer-events: auto; transition: opacity .35s ease; }
     body.started .btns { opacity: 1; pointer-events: auto; }
 
     /* Bats background */
@@ -252,7 +252,6 @@
       <div class="floaty p3">👻</div>
 
       <h1 class="title">BOOQUERÑO<br/>HALLOWEEN&nbsp;MAP<br/>2025</h1>
-      <p class="subtitle" style="color:#39ff14; font-family:'Creepster', cursive;">Pick your fate.</p>
 
       <p class="body-text" style="text-align:center; max-width:600px; margin:18px auto; line-height:1.5; font-size:clamp(16px,2.6vw,20px); color:#f3f3f3; opacity:0.9;">
         Welcome to the <strong>BOOQUERÑO HALLOWEEN MAP 2025</strong> — a cute Halloween trick website with a <em>treat</em> packed inside!
@@ -263,7 +262,7 @@
         Don’t worry — the <em>Trick</em> isn’t scary. Halloween is fun for everyone!
       </p>
 
-      <div id="tapStart">Tap to start</div>
+      <p class="subtitle" style="color:#39ff14; font-family:'Creepster', cursive;">Pick your fate.</p>
       <div class="btns">
         <button class="btn trick" id="trickBtn" aria-label="Trick">🎭 Trick</button>
         <button class="btn treat" id="treatBtn" aria-label="Treat">🍬 Treat</button>
