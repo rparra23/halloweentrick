@@ -50,23 +50,8 @@
                   var(--bg);
       overflow-x: hidden;
     }
-    .wrap {
-      min-height: 100%;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-    .card {
-      width: 100%;
-      max-width: 780px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
-      padding: 28px;
-      position: relative;
-      overflow: hidden;
-    }
+    .wrap { min-height: 100%; display: block; padding: 24px 18px; }
+    .card { width: 100%; max-width: none; background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; position: relative; overflow: visible; }
     .title {
       font-family: Creepster, Inter, system-ui, sans-serif;
       font-size: clamp(36px, 8vw, 68px);
@@ -166,6 +151,30 @@
       transform: scale(1.05);
     }
 
+    /* Fade-in body text and staged buttons */
+    .body-text { opacity: 0; animation: fadeUp 0.7s ease forwards 0.35s; }
+    #tapStart { text-align:center; margin:16px 0 6px; font-weight:700; letter-spacing:.5px; opacity:.85; animation:pulse 1.2s ease-in-out infinite; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:none;} }
+    @keyframes pulse { 0%{opacity:.45} 50%{opacity:1} 100%{opacity:.45} }
+    .btns { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+    body.started .btns { opacity: 1; pointer-events: auto; }
+
+    /* Bats background */
+    .bats { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .bats .bat { position: absolute; top: -40px; font-size: clamp(24px,6vw,44px); opacity:.75; animation: bat-fly linear infinite; }
+    @keyframes bat-fly { from { transform: translateX(-10vw) translateY(0); } to { transform: translateX(110vw) translateY(6vh); } }
+    .bat.b1 { left: -10vw; animation-duration: 8s; }
+    .bat.b2 { left: -14vw; animation-duration: 10s; animation-delay: .8s; top: 8vh; }
+    .bat.b3 { left: -18vw; animation-duration: 12s; animation-delay: 1.6s; top: 16vh; }
+    .bat.b4 { left: -22vw; animation-duration: 9s; animation-delay: 2.2s; top: 24vh; }
+    .bat.b5 { left: -26vw; animation-duration: 11s; animation-delay: 3s; top: 32vh; }
+
+    /* Rick overlay lives at page level */
+    .rick-overlay { position: fixed; inset: 0; z-index: 160; background: #000; display:none; }
+    .rick-overlay .rick-embed { position: absolute; inset: 0; width:100%; height:100%; }
+    .rick-overlay .rick-embed video { position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .rr-close { position:fixed; top:16px; right:16px; z-index:170; background:rgba(0,0,0,0.6); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:10px; padding:8px 12px; }
+
     @media (max-width: 420px) {
       .btn { font-size: 16px; padding: 14px 16px; }
       .subtitle { font-size: 16px; }
@@ -217,6 +226,13 @@
 </head>
 <body>
   <a href="https://www.nmtechtalks.com/events" target="_blank" rel="noopener" class="event-tab">Local Tech Events in ABQ</a>
+  <div class="bats" aria-hidden="true">
+    <span class="bat b1">🦇</span>
+    <span class="bat b2">🦇</span>
+    <span class="bat b3">🦇</span>
+    <span class="bat b4">🦇</span>
+    <span class="bat b5">🦇</span>
+  </div>
   <div class="wrap">
     <div class="card">
       <div class="floaty p1">🎃</div>
@@ -226,11 +242,6 @@
       <h1 class="title">BOOQUERÑO<br/>HALLOWEEN&nbsp;MAP<br/>2025</h1>
       <p class="subtitle" style="color:#39ff14; font-family:'Creepster', cursive;">Pick your fate.</p>
 
-      <div class="btns">
-        <button class="btn trick" id="trickBtn" aria-label="Trick">🎭 Trick</button>
-        <button class="btn treat" id="treatBtn" aria-label="Treat">🍬 Treat</button>
-      </div>
-
       <p class="body-text" style="text-align:center; max-width:600px; margin:18px auto; line-height:1.5; font-size:clamp(16px,2.6vw,20px); color:#f3f3f3; opacity:0.9;">
         Welcome to the <strong>BOOQUERÑO HALLOWEEN MAP 2025</strong> — a cute Halloween trick website with a <em>treat</em> packed inside!
         Discover a curated map of Albuquerque’s most festive Halloween stops — from spooky house displays and haunted attractions to cozy trick‑or‑treat hotspots.
@@ -239,6 +250,12 @@
         <br><br>
         Don’t worry — the <em>Trick</em> isn’t scary. Halloween is fun for everyone!
       </p>
+
+      <div id="tapStart">Tap to start</div>
+      <div class="btns">
+        <button class="btn trick" id="trickBtn" aria-label="Trick">🎭 Trick</button>
+        <button class="btn treat" id="treatBtn" aria-label="Treat">🍬 Treat</button>
+      </div>
 
       <p class="footer">No data is collected. This is a harmless prank.</p>
       <p class="footer">Made by <a href="https://rparra23.github.io/Personal-Website/" target="_blank" rel="noopener">Rudy Parra</a>.</p>
@@ -265,11 +282,6 @@
         </div>
 
         <div class="error-flash" id="errorFlash" aria-hidden="true"></div>
-        <div class="rick" id="rick" style="display:none">
-          <div class="rick-embed">
-            <video id="rickVideo" src="v0f025gc0000cgmed4rc77ubta66o2p0.MP4" playsinline preload="auto" controls style="display:none"></video>
-          </div>
-        </div>
       </div>
 
       <button class="close" id="trickClose" style="display:none">Close</button>
@@ -306,6 +318,13 @@
     const trickModal = document.getElementById('trickModal');
     const treatModal = document.getElementById('treatModal');
     const trickClose = document.getElementById('trickClose');
+    const rickOverlay = document.getElementById('rickOverlay');
+    const rrClose = document.getElementById('rrClose');
+    (function initStartGate(){
+      const start = () => { document.body.classList.add('started'); window.removeEventListener('click', start, true); };
+      window.addEventListener('click', start, true);
+      setTimeout(start, 4500);
+    })();
 
     // Accessibility helpers
     function trapFocus(modal) {
@@ -374,42 +393,51 @@
           rv.muted = true;
           rv.volume = 0;
           rv.load();
-          rv.play().catch(() => {});
+          // do not call play() here to avoid iOS showing a spinner
         } catch (e) { /* no-op */ }
       }
     }
     function endWithRick(message = "JUST KIDDING — YOU'VE BEEN TRICKED 🎃") {
-      fakeTerminal.textContent += '\n\n' + message;
-      scanFileEl.textContent = 'complete';
-      progressBar.style.width = '100%';
-      trickCloseEl.style.display = 'inline-flex';
-      trickCloseEl.focus();
-      const rick = document.getElementById('rick');
-      if (rick) {
-        rick.style.display = 'block';
-        const rv = document.getElementById('rickVideo');
-        if (rv) {
-          try {
-            rv.style.display = 'block';
-            rv.currentTime = 0;
-            rv.muted = false;
-            rv.volume = 1.0;
-            const p = rv.play();
-            if (p !== undefined) {
-              p.then(() => {
-                if (rv.requestFullscreen) rv.requestFullscreen().catch(() => {});
-                else if (rv.webkitRequestFullscreen) rv.webkitRequestFullscreen();
-                else if (rv.msRequestFullscreen) rv.msRequestFullscreen();
-              }).catch(() => {});
-            }
-          } catch (e) { /* no-op */ }
-        }
+      try {
+        fakeTerminal.textContent += '\n\n' + message;
+        scanFileEl.textContent = 'complete';
+        progressBar.style.width = '100%';
+      } catch(_){}
+
+      // Hide any trick modal if it was shown
+      if (trickModalEl) trickModalEl.classList.remove('show');
+
+      // Show overlay and play video with sound
+      if (rickOverlay) rickOverlay.style.display = 'block';
+      const rv = document.getElementById('rickVideo');
+      if (rv) {
+        try {
+          rv.currentTime = 0;
+          rv.muted = false;
+          rv.volume = 1.0;
+          const p = rv.play();
+          if (p !== undefined) {
+            p.then(() => {
+              if (rv.requestFullscreen) rv.requestFullscreen().catch(() => {});
+              else if (rv.webkitEnterFullscreen) rv.webkitEnterFullscreen();
+            }).catch(() => {});
+          }
+        } catch (e) { /* no-op */ }
       }
     }
 
+    if (rrClose) {
+      rrClose.addEventListener('click', () => {
+        const rv = document.getElementById('rickVideo');
+        if (rv) { try { rv.pause(); } catch(_){} }
+        if (rickOverlay) rickOverlay.style.display = 'none';
+        document.querySelectorAll('.fx-overlay,.split-wrap,.confetti,.ghost').forEach(n=>n.remove());
+        document.body.classList.remove('shake');
+        document.documentElement.classList.remove('flip','invert','static');
+      });
+    }
+
 function runVirusTrick() {
-      trickModalEl.classList.add('show');
-      trapFocus(trickModalEl);
       primeVideo();
 
       const terminalLines = [
@@ -466,8 +494,6 @@ function runVirusTrick() {
 
 // --- Trick variants (visible differences) ---
 function runGhostTrick() {
-  trickModalEl.classList.add('show');
-  trapFocus(trickModalEl);
   primeVideo();
 
   const terminalLines = [
@@ -501,8 +527,6 @@ function runGhostTrick() {
 }
 
 function runAITrick() {
-  trickModalEl.classList.add('show');
-  trapFocus(trickModalEl);
   primeVideo();
 
   const terminalLines = [
@@ -594,13 +618,13 @@ function runAITrick() {
 
     // Variant 3: Button dodge (hover/touch 3 times)
     function runButtonDodgeTrick() {
-      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
-      const btn = trickCloseEl; btn.style.display='inline-flex';
+      primeVideo();
+      const btn = trickBtnEl;
       let moves = 0; const maxMoves = 3;
       function hop() {
         if (moves >= maxMoves) { btn.removeEventListener('mouseenter', hop); btn.removeEventListener('touchstart', hop); btn.style.transform=''; endWithRick(); return; }
         moves++;
-        const x = Math.round((Math.random()*60)-30); const y = Math.round((Math.random()*40)-20);
+        const x = Math.round((Math.random()*120)-60); const y = Math.round((Math.random()*60)-30);
         btn.style.transform = `translate(${x}px, ${y}px)`;
       }
       btn.addEventListener('mouseenter', hop, {passive:true});
@@ -726,5 +750,12 @@ function runAITrick() {
       if(e.target === treatModal) treatModal.classList.remove('show');
     });
   </script>
+
+  <div id="rickOverlay" class="rick-overlay">
+    <div class="rick-embed">
+      <video id="rickVideo" src="v0f025gc0000cgmed4rc77ubta66o2p0.MP4" playsinline preload="auto" controls></video>
+    </div>
+    <button id="rrClose" class="rr-close" aria-label="Close">Close</button>
+  </div>
 </body>
 </html>
