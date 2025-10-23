@@ -10,6 +10,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     /* Trick UI styles */
+    /* Hamburger menu */
+    .menu-btn{position:fixed;top:18px;left:18px;z-index:220;width:42px;height:38px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);display:inline-grid;place-items:center;cursor:pointer}
+    .menu-btn span{display:block;width:22px;height:2px;background:#fff;margin:3px 0;transition:transform .2s ease,opacity .2s ease}
+    .menu-btn.open span:nth-child(1){transform:translateY(5px) rotate(45deg)}
+    .menu-btn.open span:nth-child(2){opacity:0}
+    .menu-btn.open span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+
+    .menu-panel{position:fixed;top:64px;left:18px;z-index:210;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px;display:none;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,.45);transform:translateX(-20px);opacity:0;transition:transform 0.3s ease,opacity 0.3s ease;}
+    .menu-panel.show{display:block;transform:translateX(0);opacity:1;}
+    .menu-panel a,.menu-panel button{display:block;width:100%;text-align:left;padding:10px 12px;color:#fff;text-decoration:none;font-weight:600;border:none;background:transparent;cursor:pointer;border-radius:8px;font-size: 16px;}
+    .menu-panel a:hover,.menu-panel button:hover{background:rgba(255,255,255,.08)}
+
+    /* Events page */
+    .page{display:none;min-height:100vh;padding:24px 18px 40px}
+    .page.show{display:block}
+    .events-title{font-family:'Creepster',cursive;color:#39ff14;text-align:center;font-size:clamp(36px,8vw,68px);margin:18px 0;text-shadow:0 0 22px rgba(57,255,20,.35),0 0 42px rgba(57,255,20,.25)}
+    .back-btn{position:fixed;top:18px;left:18px;z-index:230;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
+    .events-list{max-width:760px;margin:0 auto;display:grid;gap:14px}
+    .event-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px}
+    .event-card a{color:#39ff14;font-weight:700;text-decoration:underline}
+    .event-card p{margin:8px 0 0;opacity:.95}
+
+    @media (max-width:480px){.menu-panel{right:12px;top:58px;min-width:200px}}
     .trick-ui { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:#cbd5e1; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.5)); padding:12px; border-radius:10px; }
     .terminal { background: rgba(0,0,0,0.75); padding:12px; margin:0 0 12px 0; border-radius:6px; min-height:96px; white-space:pre-wrap; font-size:13px; overflow:hidden; color:#39ff14; text-shadow:0 0 8px rgba(57,255,20,0.25); }
     .scan { margin-bottom:8px; }
@@ -236,7 +259,13 @@
   </style>
 </head>
 <body>
-  <a href="https://www.nmtechtalks.com/events" target="_blank" rel="noopener" class="event-tab">Local Tech Events in ABQ</a>
+  <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menuPanel">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="menu-panel" id="menuPanel" role="menu">
+    <button id="moreEvents" role="menuitem">More Halloween Events</button>
+    <a href="https://www.nmtechtalks.com/events" target="_blank" rel="noopener" role="menuitem">Local Tech Events in ABQ</a>
+  </nav>
   <div class="bats" aria-hidden="true">
     <span class="bat b1">🦇</span>
     <span class="bat b2">🦇</span>
@@ -271,6 +300,44 @@
     </div>
   </div>
 
+  <section id="eventsPage" class="page" aria-labelledby="eventsTitle">
+    <button class="back-btn" id="eventsBack" aria-label="Back to home">← Back</button>
+    <h1 class="events-title" id="eventsTitle">More Halloween Events</h1>
+    <div class="events-list">
+      <div class="event-card">
+        <a href="https://www.instagram.com/p/DQKVWh5D8h4/" target="_blank" rel="noopener">Corrales Trunk or Treat Balloon Glow Invitational</a>
+        <p>The 2025 Corrales Trunk or Treat Balloon Glow Invitational is back and bigger than ever — but with a twist. Due to soaring popularity, this year’s event will be limited to 12 full‑sized balloons (no cap on RC balloons).</p>
+        <p><strong>When:</strong> October 31, 2025<br><strong>Where:</strong> 500 Jones Rd, Corrales, NM 87048<br><strong>Contact:</strong> corralestrickortrunkballoonglo@gmail.com</p>
+        <p>Don’t miss Albuquerque’s spookiest glow‑up of the year.</p>
+      </div>
+      <div class="event-card">
+        <a href="https://www.facebook.com/share/1SArrfajJ9/" target="_blank" rel="noopener">THE HALLOWEEN FESTIVAL at Expressions</a>
+        <p>Expressions transforms into the ultimate spooktacular playground of music, magic, and mayhem! Enjoy haunted house thrills, live bands, unique vendors, fire dancing, a costume contest, and a Halloween fashion show. Bring kids for free trick‑or‑treating from 3PM–6PM. After 6PM, the neon glow party begins with immersive lights, community vibes, and no alcohol. Tickets are $25 — space is limited and will sell out!</p>
+        <p><strong>When:</strong> October 31, 2025<br><strong>Where:</strong> Expressions<br><strong>Admission:</strong> $25 | Kids Trick‑or‑Treat 3–6PM (Free)</p>
+        <p>Don’t just celebrate Halloween — experience it at Expressions.</p>
+      </div>
+      <div class="event-card">
+        <a href="https://www.albuquerqueoldtown.com/event/halloween-in-old-town-albuquerque-2025/" target="_blank" rel="noopener">Halloween in Old Town Albuquerque 2025</a>
+        <p>Free, family‑friendly trick‑or‑treating through the Old Town plazas with music, costumes, candy from many local merchants, shopping, and more. Participating shops hand out candy from 4:00–7:00 PM or while supplies last.</p>
+        <p><strong>When:</strong> October 31, 2025, 4:00 PM – 7:00 PM<br>
+           <strong>Where:</strong> Old Town Albuquerque, 200 N Plaza St NW, Albuquerque, NM 87104<br>
+           <strong>Type:</strong> Celebration · Featured</p>
+      </div>
+      <div class="event-card">
+        <a href="https://www.visitalbuquerque.org/event/scare-a-ton-haunted-disco/61498/" target="_blank" rel="noopener">SCARE‑A‑TON HAUNTED DISCO</a>
+        <p>Presented by Sheraton Albuquerque Uptown. Enjoy free trick‑or‑treating plus $1 haunted house, $1 carnival and games, and a $1 cake walk — a budget‑friendly Halloween stop for families.</p>
+        <p><strong>When:</strong> October 31, 2025, 5:00 PM – 8:00 PM<br>
+           <strong>Where:</strong> Sheraton Albuquerque Uptown, 2600 Louisiana Blvd. NE, Albuquerque, NM 87110</p>
+      </div>
+      <div class="event-card">
+        <a href="https://www.crawlwith.us/albuquerque/halloween" target="_blank" rel="noopener">Crawl With US — Halloween Bar Crawl (Albuquerque)</a>
+        <p>Two nights of spooky bar‑crawl fun with thousands of crawlers, 5+ venues, 2–3 included drinks or shots, exclusive specials, photographers, a mid‑party, and a crazy after party. Your ticket covers both nights.</p>
+        <p><strong>When:</strong> Oct 31 &amp; Nov 1, 2025, 4:00 PM – 12:00 AM<br>
+           <strong>Check‑in:</strong> Friday @ Bourbon &amp; Boots (325 Central Ave NW) · Saturday @ The Library Bar &amp; Grill (312 Central Ave SW)<br>
+           <strong>Perks:</strong> No cover at bars, stadium cup + lanyard, vouchers, drink/food specials</p>
+      </div>
+    </div>
+  </section>
   <!-- Trick modal -->
   <div class="modal" id="trickModal" role="dialog" aria-modal="true" aria-labelledby="trickTitle">
     <div class="modal-box">
@@ -329,6 +396,41 @@
     const trickClose = document.getElementById('trickClose');
     const rickOverlay = document.getElementById('rickOverlay');
     const rrClose = document.getElementById('rrClose');
+
+    // Menu + Events page
+    const menuBtn = document.getElementById('menuBtn');
+    const menuPanel = document.getElementById('menuPanel');
+    const moreEvents = document.getElementById('moreEvents');
+    const eventsPage = document.getElementById('eventsPage');
+    const eventsBack = document.getElementById('eventsBack');
+    const mainWrap = document.querySelector('.wrap');
+    const eventTab = document.querySelector('.event-tab');
+
+    function closeMenu(){ menuBtn.classList.remove('open'); menuPanel.classList.remove('show'); menuBtn.setAttribute('aria-expanded','false'); }
+
+    menuBtn.addEventListener('click', () => {
+      const open = !menuPanel.classList.contains('show');
+      menuBtn.classList.toggle('open', open);
+      menuPanel.classList.toggle('show', open);
+      menuBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!menuPanel.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu();
+    }, true);
+
+    moreEvents.addEventListener('click', () => {
+      closeMenu();
+      if (mainWrap) mainWrap.style.display = 'none';
+      if (eventTab) eventTab.style.display = 'none';
+      eventsPage.classList.add('show');
+    });
+
+    eventsBack.addEventListener('click', () => {
+      eventsPage.classList.remove('show');
+      if (mainWrap) mainWrap.style.display = '';
+      if (eventTab) eventTab.style.display = '';
+    });
     (function initStartGate(){
       const start = () => { document.body.classList.add('started'); window.removeEventListener('click', start, true); };
       window.addEventListener('click', start, true);
