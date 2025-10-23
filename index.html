@@ -8,9 +8,6 @@
   <meta name="description" content="A spooky Trick-or-Treat greeting from Rudy Parra." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@mapbox/leaflet-omnivore/leaflet-omnivore.min.js"></script>
   <style>
     /* Trick UI styles */
     .trick-ui { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:#cbd5e1; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.5)); padding:12px; border-radius:10px; }
@@ -148,7 +145,6 @@
     /* Map modal */
     .map-wrap { position: relative; width: 100%; height: 0; padding-bottom: 65%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18); background: #0e0e14; }
     .map-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    .map-wrap #leafletMap { position: absolute; inset: 0; width: 100%; height: 100%; }
 
     .event-tab {
       position: fixed;
@@ -179,6 +175,44 @@
     .rick { margin-top:14px; }
     .rick-embed { position: relative; width:100%; padding-top:56.25%; border-radius:10px; overflow:hidden; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
     .rick-embed iframe, .rick-embed video { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+    /* Universal overlay for extra trick variants */
+    .fx-overlay { position: fixed; inset: 0; z-index: 140; display:grid; place-items:center; background: rgba(0,0,0,0.75); color:#fff; text-align:center; padding:20px; }
+    .fx-card { background: rgba(20,20,28,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:18px; max-width: 680px; width: min(92vw, 680px); box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+    .fx-title { font-family:'Creepster', cursive; font-size: clamp(22px,5.6vw,36px); margin:0 0 8px; color:#ff6b00; }
+    .fx-text { font: 600 14px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; opacity:0.95; }
+    .fx-progress { height: 12px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow:hidden; margin-top:12px; }
+    .fx-bar { height:100%; width:0; background: linear-gradient(90deg,#7c3aed,#39ff14); transition: width 0.25s linear; }
+
+    /* Static noise effect */
+    .static:before { content:''; position:fixed; inset:0; z-index:150; pointer-events:none; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="90" viewBox="0 0 160 90"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.25"/></svg>'); animation: noise .15s steps(2,end) infinite; }
+    @keyframes noise { to { transform: translate3d(1px,0,0); } }
+
+    /* Shake / flip / invert flashes */
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%, 90% { transform: translateX(-4px); } 20%, 80% { transform: translateX(4px);} 30%, 50%, 70% { transform: translateX(-8px);} 40%, 60% { transform: translateX(8px);} }
+    .flip { transform: rotate(180deg); transition: transform 0.6s ease; }
+    .invert { filter: invert(1) hue-rotate(180deg); transition: filter 0.2s ease; }
+
+    /* Ghost pass animation */
+    .ghost { position:fixed; top: 30%; left:-120px; font-size: clamp(48px,12vw,96px); z-index:145; filter: drop-shadow(0 8px 30px rgba(255,255,255,0.25)); animation: ghost-move 2.6s ease forwards; }
+    @keyframes ghost-move { from { transform: translateX(0); opacity:0.2;} 20% {opacity:1;} to { transform: translateX(120vw); opacity:0.2;} }
+
+    /* Split glitch */
+    .split-wrap { position: fixed; inset: 0; z-index: 145; pointer-events:none; }
+    .split-left, .split-right { position:absolute; inset:0; background: inherit; filter: contrast(120%); mix-blend-mode: screen; }
+    .split-left { transform: translateX(-4px); clip-path: inset(0 50% 0 0); }
+    .split-right { transform: translateX(4px); clip-path: inset(0 0 0 50%); }
+
+    /* QR box */
+    .qr-box { background:#fff; color:#111; padding:16px; border-radius:12px; width:min(90vw,360px); }
+    .qr-title { font-weight:800; margin:0 0 6px; }
+    .qr-img { width:100%; height:auto; display:block; }
+
+    /* Confetti (emoji) */
+    .confetti { position: fixed; inset: 0; pointer-events:none; z-index: 150; overflow:hidden; }
+    .confetti span { position:absolute; font-size: clamp(16px,5vw,28px); animation: fall 1.4s linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0.2; } }
   </style>
 </head>
 <body>
@@ -233,7 +267,7 @@
         <div class="error-flash" id="errorFlash" aria-hidden="true"></div>
         <div class="rick" id="rick" style="display:none">
           <div class="rick-embed">
-            <video id="rickVideo" src="v0f025gc0000cgmed4rc77ubta66o2p0.MP4" playsinline controls style="display:none"></video>
+            <video id="rickVideo" src="v0f025gc0000cgmed4rc77ubta66o2p0.MP4" playsinline preload="auto" controls style="display:none"></video>
           </div>
         </div>
       </div>
@@ -332,18 +366,51 @@
       setTimeout(()=> { errorFlash.style.opacity = '0'; }, t);
     }
 
-    function runTrickSequence() {
-      trickModalEl.classList.add('show');
-      trapFocus(trickModalEl);
-      // Prime the local video on user click to satisfy autoplay policies
-      const rickVideo = document.getElementById('rickVideo');
-      if (rickVideo) {
+    function primeVideo() {
+      const rv = document.getElementById('rickVideo');
+      if (rv) {
         try {
-          rickVideo.muted = true;
-          rickVideo.volume = 0;
-          rickVideo.play().catch(() => {});
+          rv.preload = 'auto';
+          rv.muted = true;
+          rv.volume = 0;
+          rv.load();
+          rv.play().catch(() => {});
         } catch (e) { /* no-op */ }
       }
+    }
+    function endWithRick(message = "JUST KIDDING — YOU'VE BEEN TRICKED 🎃") {
+      fakeTerminal.textContent += '\n\n' + message;
+      scanFileEl.textContent = 'complete';
+      progressBar.style.width = '100%';
+      trickCloseEl.style.display = 'inline-flex';
+      trickCloseEl.focus();
+      const rick = document.getElementById('rick');
+      if (rick) {
+        rick.style.display = 'block';
+        const rv = document.getElementById('rickVideo');
+        if (rv) {
+          try {
+            rv.style.display = 'block';
+            rv.currentTime = 0;
+            rv.muted = false;
+            rv.volume = 1.0;
+            const p = rv.play();
+            if (p !== undefined) {
+              p.then(() => {
+                if (rv.requestFullscreen) rv.requestFullscreen().catch(() => {});
+                else if (rv.webkitRequestFullscreen) rv.webkitRequestFullscreen();
+                else if (rv.msRequestFullscreen) rv.msRequestFullscreen();
+              }).catch(() => {});
+            }
+          } catch (e) { /* no-op */ }
+        }
+      }
+    }
+
+function runVirusTrick() {
+      trickModalEl.classList.add('show');
+      trapFocus(trickModalEl);
+      primeVideo();
 
       const terminalLines = [
         'Connecting to spookyserver.net...',
@@ -389,34 +456,7 @@
               glitchOverlay.classList.add('active');
               setTimeout(()=> glitchOverlay.classList.remove('active'), 900);
               setTimeout(() => {
-                fakeTerminal.textContent += '\n\nJUST KIDDING — YOU\'VE BEEN TRICKED 🎃';
-                scanFileEl.textContent = 'scan complete';
-                progressBar.style.width = '100%';
-                trickCloseEl.style.display = 'inline-flex';
-                trickCloseEl.focus();
-                const rick = document.getElementById('rick');
-                if (rick) {
-                  rick.style.display = 'block';
-                  const rv = document.getElementById('rickVideo');
-                  if (rv) {
-                    try {
-                      rv.style.display = 'block';
-                      rv.currentTime = 0;
-                      rv.muted = false;
-                      rv.volume = 1.0;
-                      const p = rv.play();
-                      if (p !== undefined) {
-                        p.then(() => {
-                          if (rv.requestFullscreen) rv.requestFullscreen().catch(() => {});
-                          else if (rv.webkitRequestFullscreen) rv.webkitRequestFullscreen();
-                          else if (rv.msRequestFullscreen) rv.msRequestFullscreen();
-                        }).catch(() => {
-                          console.warn('Autoplay blocked; user interaction required.');
-                        });
-                      }
-                    } catch (e) { /* no-op */ }
-                  }
-                }
+                endWithRick();
               }, 900);
             }, 550);
           }
@@ -424,10 +464,235 @@
       });
     }
 
-    trickBtnEl.addEventListener('click', runTrickSequence);
+// --- Trick variants (visible differences) ---
+function runGhostTrick() {
+  trickModalEl.classList.add('show');
+  trapFocus(trickModalEl);
+  primeVideo();
+
+  const terminalLines = [
+    'Contacting ecto-relay...',
+    'Summoning friendly ghosts...',
+    'Negotiating spectral bandwidth...',
+    'Queuing uploads...'
+  ];
+  typeLines(fakeTerminal, terminalLines, 24, () => {
+    let progress = 0; const total = 10; let sent = 0;
+    const files = ['door_creak.wav','boo_whisper.aac','candy_manifest.csv','map_sightings.kml','pumpkin_glow.png','bat_paths.geojson'];
+    const t = setInterval(() => {
+      sent++;
+      const fname = files[Math.floor(Math.random()*files.length)];
+      scanFileEl.textContent = fname;
+      progress = Math.min(100, Math.round((sent/total)*100));
+      progressBar.style.width = progress + '%';
+      if (Math.random() < 0.3) {
+        const errors = ['Upload delay: ectoplasm detected','Retrying… spirit busy','Warning: lantern flicker'];
+        flashError(errors[Math.floor(Math.random()*errors.length)], 700);
+      }
+      if (progress === 30 || progress === 60) {
+        glitchOverlay.classList.add('active');
+        setTimeout(()=> glitchOverlay.classList.remove('active'), 500 + Math.random()*500);
+      }
+      fakeTerminal.textContent += '\n[upload] ' + fname + ' ... DONE';
+      fakeTerminal.scrollTop = fakeTerminal.scrollHeight;
+      if (sent >= total) { clearInterval(t); setTimeout(() => endWithRick('JUST KIDDING — GHOSTS APPROVE 🎃'), 700); }
+    }, 260);
+  });
+}
+
+function runAITrick() {
+  trickModalEl.classList.add('show');
+  trapFocus(trickModalEl);
+  primeVideo();
+
+  const terminalLines = [
+    'Initializing candy-model v2...',
+    'Loading weights… 13M params',
+    'Sampling spooky text…',
+    'Optimizing treat routes...'
+  ];
+  typeLines(fakeTerminal, terminalLines, 18, () => {
+    let i = 0; const total = 16;
+    const phrases = ['hallucination reduced','pumpkin token saved','ghost prompt parsed','candy cache warmed','latency: 13ms'];
+    const t = setInterval(() => {
+      i++;
+      progressBar.style.width = Math.min(100, Math.round((i/total)*100)) + '%';
+      if (Math.random() < 0.35) {
+        const errs = ['Model drift detected','Overfitting on candy','GPU haunted; falling back','Cache miss: cobweb'];
+        flashError(errs[Math.floor(Math.random()*errs.length)], 650);
+      }
+      if (i === 5 || i === 12) {
+        glitchOverlay.classList.add('active');
+        setTimeout(()=> glitchOverlay.classList.remove('active'), 600);
+      }
+      const phrase = phrases[Math.floor(Math.random()*phrases.length)];
+      fakeTerminal.textContent += '\n[ai] ' + phrase;
+      fakeTerminal.scrollTop = fakeTerminal.scrollHeight;
+      if (i >= total) { clearInterval(t); setTimeout(() => endWithRick(), 600); }
+    }, 220);
+  });
+}
+
+
+    // --- Trick variants framework ---
+    function runPumpkinTrick() {
+      // TODO: implement alternate "Pumpkin.exe update" variant
+      return runVirusTrick();
+    }
+
+    const TRICK_VARIANTS = [
+      runVirusTrick,
+      runGhostTrick,
+      runAITrick,
+      runPumpkinTrick,
+      runStaticTrick,
+      runCursorJailbreakTrick,
+      runButtonDodgeTrick,
+      runOsUpdateTrick,
+      runScreenFlipTrick,
+      runInvertFlashTrick,
+      runWindowShakeTrick,
+      runGhostPassTrick,
+      runFakeQRTrick,
+      runConfettiTrick,
+      runBatterySpoofTrick,
+      runSplitGlitchTrick,
+      runCountdownTrick
+    ];
+    // Helpers for variants
+    const isTouch = () => matchMedia('(pointer: coarse)').matches;
+    function makeOverlay(innerHTML) {
+      const o = document.createElement('div');
+      o.className = 'fx-overlay';
+      o.innerHTML = innerHTML;
+      document.body.appendChild(o);
+      return o;
+    }
+    function removeOverlay(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
+
+    // Variant 1: Screen static
+    function runStaticTrick() {
+      trickModalEl.classList.add('show');
+      trapFocus(trickModalEl); primeVideo();
+      document.documentElement.classList.add('static');
+      setTimeout(()=>{ document.documentElement.classList.remove('static'); endWithRick(); }, 1600);
+    }
+
+    // Variant 2: Cursor jailbreak (mobile => shake)
+    function runCursorJailbreakTrick() {
+      trickModalEl.classList.add('show');
+      trapFocus(trickModalEl); primeVideo();
+      if (isTouch()) {
+        document.body.classList.add('shake');
+        setTimeout(()=>{ document.body.classList.remove('shake'); endWithRick(); }, 900);
+        return;
+      }
+      let handler = (e)=>{ document.body.style.transform = `translate(${(Math.random()*80-40)|0}px, ${(Math.random()*20-10)|0}px)`; };
+      window.addEventListener('mousemove', handler);
+      setTimeout(()=>{ window.removeEventListener('mousemove', handler); document.body.style.transform=''; endWithRick(); }, 1200);
+    }
+
+    // Variant 3: Button dodge (hover/touch 3 times)
+    function runButtonDodgeTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const btn = trickCloseEl; btn.style.display='inline-flex';
+      let moves = 0; const maxMoves = 3;
+      function hop() {
+        if (moves >= maxMoves) { btn.removeEventListener('mouseenter', hop); btn.removeEventListener('touchstart', hop); btn.style.transform=''; endWithRick(); return; }
+        moves++;
+        const x = Math.round((Math.random()*60)-30); const y = Math.round((Math.random()*40)-20);
+        btn.style.transform = `translate(${x}px, ${y}px)`;
+      }
+      btn.addEventListener('mouseenter', hop, {passive:true});
+      btn.addEventListener('touchstart', hop, {passive:true});
+    }
+
+    // Variant 4: Fake OS update
+    function runOsUpdateTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const box = makeOverlay(`<div class="fx-card"><div class="fx-title">PumpkinOS Update</div><div class="fx-text">Installing seasonal features… Please do not close.</div><div class="fx-progress"><div class="fx-bar" id="fxBar"></div></div></div>`);
+      const bar = box.querySelector('#fxBar'); let p=0; const t=setInterval(()=>{ p=Math.min(100,p+Math.ceil(Math.random()*18)); bar.style.width=p+'%'; if(p>=100){ clearInterval(t); setTimeout(()=>{ removeOverlay(box); endWithRick('JUST KIDDING — UPDATE COMPLETE 🎃'); }, 300);} }, 260);
+    }
+
+    // Variant 5: Screen flip
+    function runScreenFlipTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      document.documentElement.classList.add('flip');
+      setTimeout(()=>{ document.documentElement.classList.remove('flip'); endWithRick(); }, 1200);
+    }
+
+    // Variant 6: Invert flash
+    function runInvertFlashTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      document.documentElement.classList.add('invert');
+      setTimeout(()=>{ document.documentElement.classList.remove('invert'); endWithRick(); }, 900);
+    }
+
+    // Variant 7: Window shake
+    function runWindowShakeTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      document.body.classList.add('shake');
+      setTimeout(()=>{ document.body.classList.remove('shake'); endWithRick(); }, 600);
+    }
+
+    // Variant 8: Ghost pass‑through
+    function runGhostPassTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const g = document.createElement('div'); g.className='ghost'; g.textContent='👻'; document.body.appendChild(g);
+      setTimeout(()=>{ g.remove(); endWithRick(); }, 2600);
+    }
+
+    // Variant 9: Fake QR prompt
+    function runFakeQRTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const url = location.href;
+      const box = makeOverlay(`<div class="fx-card"><div class="fx-title">Verify to claim candy</div><div class="fx-text">Scan this QR to continue.</div><div class="qr-box"><img class="qr-img" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}"></div></div>`);
+      setTimeout(()=>{ removeOverlay(box); endWithRick(); }, 1800);
+    }
+
+    // Variant 10: Confetti burst (emoji)
+    function runConfettiTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const c = document.createElement('div'); c.className='confetti'; document.body.appendChild(c);
+      const em = ['🎃','🍬','👻','🦇','🕸️'];
+      for(let i=0;i<40;i++){ const s=document.createElement('span'); s.textContent=em[Math.floor(Math.random()*em.length)]; s.style.left=Math.random()*100+'vw'; s.style.top='-20px'; c.appendChild(s); }
+      setTimeout(()=>{ c.remove(); endWithRick(); }, 1200);
+    }
+
+    // Variant 11: Battery spoof
+    function runBatterySpoofTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const box = makeOverlay(`<div class="fx-card"><div class="fx-title">Battery Low</div><div class="fx-text">5% remaining. Enabling power‑saving…</div></div>`);
+      setTimeout(()=>{ removeOverlay(box); endWithRick(); }, 1400);
+    }
+
+    // Variant 12: Split glitch
+    function runSplitGlitchTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const w = document.createElement('div'); w.className='split-wrap';
+      const l = document.createElement('div'); l.className='split-left';
+      const r = document.createElement('div'); r.className='split-right';
+      w.appendChild(l); w.appendChild(r); document.body.appendChild(w);
+      setTimeout(()=>{ w.remove(); endWithRick(); }, 900);
+    }
+
+    // Variant 13: Countdown fakeout
+    function runCountdownTrick() {
+      trickModalEl.classList.add('show'); trapFocus(trickModalEl); primeVideo();
+      const box = makeOverlay(`<div class="fx-card"><div class="fx-title">Stand by…</div><div class="fx-text" id="cd">Self‑destruct in 3</div></div>`);
+      const cd = box.querySelector('#cd'); let n=3; const t=setInterval(()=>{ n--; cd.textContent = 'Self‑destruct in ' + n; if(n<=0){ clearInterval(t); removeOverlay(box); endWithRick(); } }, 500);
+    }
+
+    function runRandomTrick() {
+      const pick = TRICK_VARIANTS[Math.floor(Math.random() * TRICK_VARIANTS.length)];
+      pick();
+    }
+
+    trickBtnEl.addEventListener('click', runRandomTrick);
 
     trickCloseEl.addEventListener('click', () => {
       trickModalEl.classList.remove('show');
+      document.querySelectorAll('.fx-overlay,.split-wrap,.confetti,.ghost').forEach(n=>n.remove());
       // reset UI for next run
       fakeTerminal.textContent = 'Initializing...';
       scanFileEl.textContent = 'preparing...';
@@ -439,6 +704,7 @@
     trickModalEl.addEventListener('click', (e) => {
       if(e.target === trickModalEl) {
         trickModalEl.classList.remove('show');
+        document.querySelectorAll('.fx-overlay,.split-wrap,.confetti,.ghost').forEach(n=>n.remove());
         fakeTerminal.textContent = 'Initializing...';
         scanFileEl.textContent = 'preparing...';
         progressBar.style.width = '0%';
@@ -458,45 +724,6 @@
 
     treatModal.addEventListener('click', (e) => {
       if(e.target === treatModal) treatModal.classList.remove('show');
-    });
-    // Progressive enhancement: try to render a local or hosted KML via Leaflet; fall back to My Maps iframe
-    let kmlInitialized = false;
-    function loadKmlMap() {
-      if (kmlInitialized) return;
-      const wrap = document.querySelector('.map-wrap');
-      if (!wrap) return;
-      const kmlUrl = wrap.dataset.kml || 'map.kml';
-      // Try a HEAD request to see if the KML is reachable (same-origin or CORS-enabled)
-      fetch(kmlUrl, { method: 'HEAD' })
-        .then((resp) => {
-          if (!resp.ok) throw new Error('KML not reachable');
-          const mapEl = document.getElementById('leafletMap');
-          const iframe = document.getElementById('fallbackMap');
-          // Initialize Leaflet
-          const map = L.map(mapEl).setView([35.1376, -106.6881], 13);
-          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-          }).addTo(map);
-          // Load KML
-          omnivore.kml(kmlUrl)
-            .on('ready', function () {
-              try { map.fitBounds(this.getBounds()); } catch (e) {}
-            })
-            .addTo(map);
-          // Show Leaflet, hide fallback iframe
-          mapEl.removeAttribute('aria-hidden');
-          iframe.style.display = 'none';
-          kmlInitialized = true;
-        })
-        .catch(() => {
-          // Keep iframe visible as fallback
-        });
-    }
-
-    // When Treat modal opens, attempt to load the KML map once
-    treatBtn.addEventListener('click', () => {
-      // existing code already opens the modal
-      setTimeout(loadKmlMap, 50);
     });
   </script>
 </body>
