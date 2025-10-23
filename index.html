@@ -19,6 +19,10 @@
 
     .menu-panel{position:fixed;top:64px;left:18px;z-index:210;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px;display:none;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,.45);transform:translateX(-20px);opacity:0;transition:transform 0.3s ease,opacity 0.3s ease;}
     .menu-panel.show{display:block;transform:translateX(0);opacity:1;}
+    /* Reposition hamburger + menu when map is open */
+    body.map-open .menu-btn { top: auto; left: auto; right: 16px; bottom: 16px; }
+    body.map-open .menu-panel { top: auto; left: auto; right: 16px; bottom: 72px; transform: translateY(10px); }
+    body.map-open .menu-panel.show { transform: translateY(0); }
     .menu-panel a,.menu-panel button{display:block;width:100%;text-align:left;padding:10px 12px;color:#fff;text-decoration:none;font-weight:600;border:none;background:transparent;cursor:pointer;border-radius:8px;font-size: 16px;}
     .menu-panel a:hover,.menu-panel button:hover{background:rgba(255,255,255,.08)}
 
@@ -850,15 +854,20 @@ function runAITrick() {
     // Treat opens the embedded map in a modal for mobile-friendly viewing
     treatBtn.addEventListener('click', () => {
       treatModal.classList.add('show');
+      document.body.classList.add('map-open');
       trapFocus(treatModal);
     });
 
     document.getElementById('treatClose').addEventListener('click', () => {
       treatModal.classList.remove('show');
+      document.body.classList.remove('map-open');
     });
 
     treatModal.addEventListener('click', (e) => {
-      if(e.target === treatModal) treatModal.classList.remove('show');
+      if (e.target === treatModal) {
+        treatModal.classList.remove('show');
+        document.body.classList.remove('map-open');
+      }
     });
   </script>
 
