@@ -12,6 +12,25 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@mapbox/leaflet-omnivore/leaflet-omnivore.min.js"></script>
   <style>
+    /* Trick UI styles */
+    .trick-ui { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:#cbd5e1; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.5)); padding:12px; border-radius:10px; }
+    .terminal { background: rgba(0,0,0,0.75); padding:12px; margin:0 0 12px 0; border-radius:6px; min-height:96px; white-space:pre-wrap; font-size:13px; overflow:hidden; color:#39ff14; text-shadow:0 0 8px rgba(57,255,20,0.25); }
+    .scan { margin-bottom:8px; }
+    .scan-row { display:flex; gap:8px; align-items:center; font-size:14px; }
+    .scan-label { color:#94a3b8; font-weight:700; width:70px; }
+    .scan-file { flex:1; font-family:inherit; color:#39ff14; }
+    .progress { width:100%; height:12px; background:rgba(255,255,255,0.06); border-radius:8px; overflow:hidden; margin-top:8px; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#7c3aed,#39ff14); transition:width 0.25s linear; }
+
+    .error-flash { min-height:28px; margin-top:8px; color:#ffd166; font-weight:800; text-align:center; height:28px; opacity:0; transition:opacity 0.12s ease; }
+
+    /* glitch overlay */
+    .glitch { position:fixed; inset:0; pointer-events:none; mix-blend-mode:screen; z-index:120; opacity:0; transition:opacity 0.06s linear; }
+    .glitch.active { opacity:1; }
+    .glitch .slice { position:absolute; left:0; right:0; height:18%; background:transparent; mix-blend-mode:screen; filter:blur(3px); }
+    .glitch .slice.s1 { top:6%; transform:translateX(-6px) skewX(-2deg); background:linear-gradient(90deg, rgba(255,0,50,0.06), transparent); }
+    .glitch .slice.s2 { top:34%; transform:translateX(6px) skewX(2deg); background:linear-gradient(90deg, rgba(0,255,150,0.05), transparent); }
+    .glitch .slice.s3 { top:60%; transform:translateX(-8px) skewX(-1deg); background:linear-gradient(90deg, rgba(120,0,255,0.04), transparent); }
     :root {
       --bg: #0b0b12;
       --fg: #e6e6ea;
@@ -125,6 +144,11 @@
       .btn { font-size: 16px; padding: 14px 16px; }
       .subtitle { font-size: 14px; }
     }
+
+    /* Rickroll responsive embed */
+    .rick { margin-top:14px; }
+    .rick-embed { position: relative; width:100%; padding-top:56.25%; border-radius:10px; overflow:hidden; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
+    .rick-embed iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
   </style>
 </head>
 <body>
@@ -150,9 +174,48 @@
   <div class="modal" id="trickModal" role="dialog" aria-modal="true" aria-labelledby="trickTitle">
     <div class="modal-box">
       <h2 class="modal-title" id="trickTitle">System Notice</h2>
-      <p class="modal-msg"><span class="warn">now sending all your data to Rudy Parra</span><span class="dots" aria-hidden="true"></span></p>
+
+      <!-- Trick UI: terminal + progress + error flash -->
+      <div class="trick-ui" id="trickUI">
+        <pre class="terminal" id="fakeTerminal" aria-live="polite">Initializing...</pre>
+
+        <div class="scan">
+          <div class="scan-row">
+            <div class="scan-label">Scanning:</div>
+            <div class="scan-file" id="scanFile">preparing...</div>
+          </div>
+          <div class="progress" aria-hidden="true">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="error-flash" id="errorFlash" aria-hidden="true"></div>
+        <div class="rick" id="rick" style="display:none">
+          <div class="rick-embed">
+            <iframe
+              id="rickFrame"
+              width="560"
+              height="315"
+              src="https://www.youtube.com/embed/Aq5WXmQQooo?si=nodfs-acdv90oKhx&autoplay=1&mute=1"
+              title="YouTube video player"
+              frameborder="0"
+              allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
       <button class="close" id="trickClose" style="display:none">Close</button>
     </div>
+  </div>
+
+  <!-- Glitch overlay element (page-level) -->
+  <div class="glitch" id="glitchOverlay" aria-hidden="true">
+    <div class="slice s1"></div>
+    <div class="slice s2"></div>
+    <div class="slice s3"></div>
   </div>
 
   <!-- Treat modal with fullscreen embedded map -->
@@ -194,27 +257,132 @@
       first.focus();
     }
 
-    trickBtn.addEventListener('click', () => {
-      trickModal.classList.add('show');
-      trapFocus(trickModal);
-      const msg = trickModal.querySelector('.modal-msg');
-      trickClose.style.display = 'none';
 
-      // Scare phase (~3 seconds)
-      setTimeout(() => {
-        msg.innerHTML = '<span class="ok">JUST KIDDING — YOU\'VE BEEN TRICKED 🎃</span>';
-        trickClose.style.display = 'inline-flex';
-        trickClose.focus();
-      }, 3000);
+    // --- Trick sequence: terminal + fake scan + glitch + errors ---
+    const trickBtnEl = document.getElementById('trickBtn');
+    const trickModalEl = document.getElementById('trickModal');
+    const trickCloseEl = document.getElementById('trickClose');
+    const fakeTerminal = document.getElementById('fakeTerminal');
+    const scanFileEl = document.getElementById('scanFile');
+    const progressBar = document.getElementById('progressBar');
+    const errorFlash = document.getElementById('errorFlash');
+    const glitchOverlay = document.getElementById('glitchOverlay');
+
+    function typeLines(el, lines, speed = 28, cb) {
+      let i = 0;
+      function nextLine() {
+        if (i >= lines.length) { if (cb) cb(); return; }
+        const line = lines[i++];
+        let j = 0;
+        el.textContent += '\n';
+        function typeChar() {
+          if (j >= line.length) { setTimeout(nextLine, 220); return; }
+          el.textContent += line[j++];
+          el.scrollTop = el.scrollHeight;
+          setTimeout(typeChar, speed + Math.random()*20);
+        }
+        typeChar();
+      }
+      el.textContent = ''; nextLine();
+    }
+
+    function randomFilename() {
+      const names = [
+        'passwords.txt','tax_return.pdf','holiday_photos.zip','bank_backup.enc',
+        'secrets.db','spotify_tokens.txt','secret_recipes.docx','notes_private.txt',
+        'credentials.csv','wallet_backup.key'
+      ];
+      return names[Math.floor(Math.random()*names.length)];
+    }
+
+    function flashError(msg, t=900) {
+      errorFlash.textContent = msg;
+      errorFlash.style.opacity = '1';
+      setTimeout(()=> { errorFlash.style.opacity = '0'; }, t);
+    }
+
+    function runTrickSequence() {
+      trickModalEl.classList.add('show');
+      trapFocus(trickModalEl);
+
+      const terminalLines = [
+        'Connecting to spookyserver.net...',
+        'Establishing secure tunnel...',
+        'Bypassing firewall (please wait)...',
+        'Enumerating user files...'
+      ];
+
+      typeLines(fakeTerminal, terminalLines, 28, () => {
+        let progress = 0;
+        const total = 14;
+        let scanned = 0;
+        const scanInterval = setInterval(() => {
+          scanned++;
+          const fname = randomFilename();
+          scanFileEl.textContent = fname;
+          progress = Math.min(100, Math.round((scanned/total)*100));
+          progressBar.style.width = progress + '%';
+
+          if (Math.random() < 0.28) {
+            const errors = [
+              'Error 404 — Pumpkin Not Found',
+              'System failure: ghost detected 👻',
+              'Warning: candy overflow',
+              'ERR_CONNECTION_SPOOKY',
+              'Disk read anomaly: cobwebs present'
+            ];
+            flashError(errors[Math.floor(Math.random()*errors.length)], 700);
+          }
+
+          if (progress === 40 || progress === 75) {
+            glitchOverlay.classList.add('active');
+            setTimeout(()=> glitchOverlay.classList.remove('active'), 700 + Math.random()*600);
+          }
+
+          fakeTerminal.textContent += '\n[scan] ' + fname + ' ... OK';
+          fakeTerminal.scrollTop = fakeTerminal.scrollHeight;
+
+          if (scanned >= total) {
+            clearInterval(scanInterval);
+            setTimeout(() => {
+              flashError('CRITICAL: spooky payload executed', 1300);
+              glitchOverlay.classList.add('active');
+              setTimeout(()=> glitchOverlay.classList.remove('active'), 900);
+              setTimeout(() => {
+                fakeTerminal.textContent += '\n\nJUST KIDDING — YOU\'VE BEEN TRICKED 🎃';
+                scanFileEl.textContent = 'scan complete';
+                progressBar.style.width = '100%';
+                trickCloseEl.style.display = 'inline-flex';
+                trickCloseEl.focus();
+                const rick = document.getElementById('rick');
+                if (rick) rick.style.display = 'block';
+              }, 900);
+            }, 550);
+          }
+        }, 300);
+      });
+    }
+
+    trickBtnEl.addEventListener('click', runTrickSequence);
+
+    trickCloseEl.addEventListener('click', () => {
+      trickModalEl.classList.remove('show');
+      // reset UI for next run
+      fakeTerminal.textContent = 'Initializing...';
+      scanFileEl.textContent = 'preparing...';
+      progressBar.style.width = '0%';
+      errorFlash.style.opacity = '0';
     });
 
-    trickClose.addEventListener('click', () => {
-      trickModal.classList.remove('show');
-    });
-
-    // Also close trick modal by clicking outside the box
-    trickModal.addEventListener('click', (e) => {
-      if(e.target === trickModal) trickModal.classList.remove('show');
+    // Allow closing trick modal by clicking backdrop
+    trickModalEl.addEventListener('click', (e) => {
+      if(e.target === trickModalEl) {
+        trickModalEl.classList.remove('show');
+        fakeTerminal.textContent = 'Initializing...';
+        scanFileEl.textContent = 'preparing...';
+        progressBar.style.width = '0%';
+        errorFlash.style.opacity = '0';
+      }
     });
 
     // Treat opens the embedded map in a modal for mobile-friendly viewing
