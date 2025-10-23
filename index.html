@@ -196,7 +196,7 @@
               id="rickFrame"
               width="560"
               height="315"
-              src="https://www.youtube.com/embed/Aq5WXmQQooo?si=nodfs-acdv90oKhx&autoplay=1&mute=1"
+              src="https://www.youtube.com/embed/Aq5WXmQQooo?si=nodfs-acdv90oKhx&autoplay=1&enablejsapi=1&playsinline=1"
               title="YouTube video player"
               frameborder="0"
               allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -356,6 +356,13 @@
                 trickCloseEl.focus();
                 const rick = document.getElementById('rick');
                 if (rick) rick.style.display = 'block';
+                const rickFrame = document.getElementById('rickFrame');
+                if (rickFrame && rickFrame.contentWindow) {
+                  try {
+                    rickFrame.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:''}), '*');
+                    rickFrame.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:''}), '*');
+                  } catch (e) { /* no-op */ }
+                }
               }, 900);
             }, 550);
           }
