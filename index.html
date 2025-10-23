@@ -294,6 +294,15 @@
     function runTrickSequence() {
       trickModalEl.classList.add('show');
       trapFocus(trickModalEl);
+      // Prime the local video on user click to satisfy autoplay policies
+      const rickVideo = document.getElementById('rickVideo');
+      if (rickVideo) {
+        try {
+          rickVideo.muted = true;
+          rickVideo.volume = 0;
+          rickVideo.play().catch(() => {});
+        } catch (e) { /* no-op */ }
+      }
 
       const terminalLines = [
         'Connecting to spookyserver.net...',
@@ -346,21 +355,26 @@
                 trickCloseEl.focus();
                 const rick = document.getElementById('rick');
                 if (rick) {
-                    rick.style.display = 'block';
-                    const rickVideo = document.getElementById('rickVideo');
-                    if (rickVideo) {
-                        try {
-                            setTimeout(() => {
-                                rickVideo.style.display = 'block';
-                                rickVideo.currentTime = 0;
-                                rickVideo.muted = false;
-                                rickVideo.volume = 1.0;
-                                rickVideo.play().catch(() => {
-                                    console.warn('Autoplay blocked; user interaction required.');
-                                });
-                            }, 600); // small delay to make sure the player is visible
-                        } catch (e) { /* no-op */ }
-                    }
+                  rick.style.display = 'block';
+                  const rv = document.getElementById('rickVideo');
+                  if (rv) {
+                    try {
+                      rv.style.display = 'block';
+                      rv.currentTime = 0;
+                      rv.muted = false;
+                      rv.volume = 1.0;
+                      const p = rv.play();
+                      if (p !== undefined) {
+                        p.then(() => {
+                          if (rv.requestFullscreen) rv.requestFullscreen().catch(() => {});
+                          else if (rv.webkitRequestFullscreen) rv.webkitRequestFullscreen();
+                          else if (rv.msRequestFullscreen) rv.msRequestFullscreen();
+                        }).catch(() => {
+                          console.warn('Autoplay blocked; user interaction required.');
+                        });
+                      }
+                    } catch (e) { /* no-op */ }
+                  }
                 }
               }, 900);
             }, 550);
