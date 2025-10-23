@@ -8,6 +8,9 @@
   <meta name="description" content="A spooky Trick-or-Treat greeting from Rudy Parra." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@mapbox/leaflet-omnivore/leaflet-omnivore.min.js"></script>
   <style>
     :root {
       --bg: #0b0b12;
@@ -77,6 +80,24 @@
     .p3 { left: 50%; bottom: -10px; transform: translateX(-50%); font-size: 96px; animation: drift 26s linear infinite; }
     @keyframes drift { 0% { transform: translateX(0) translateY(0) rotate(0); } 50% { transform: translateX(10px) translateY(-8px) rotate(3deg); } 100% { transform: translateX(0) translateY(0) rotate(0); } }
 
+    :root { --slime: #39ff14; }
+    @keyframes zoomFade {
+      0% { transform: translateY(0) scale(0.6); opacity: 1; }
+      60% { transform: translateY(0) scale(1.15); opacity: 1; }
+      100% { transform: translateY(0) scale(1.4); opacity: 0; }
+    }
+    .treats-header {
+      font-family:'Creepster',sans-serif;
+      color: var(--slime);
+      text-align:center;
+      font-size: clamp(36px,8vw,68px);
+      margin-top:20px;
+      text-shadow: 0 0 22px rgba(57,255,20,0.35), 0 0 42px rgba(57,255,20,0.25);
+      z-index:10; position:relative;
+      animation: zoomFade 1.8s ease-out forwards;
+      pointer-events: none; /* let map interactions pass through if overlapping */
+    }
+
     /* Modal */
     .modal {
       position: fixed; inset: 0; display: none; place-items: center; padding: 20px;
@@ -98,6 +119,7 @@
     /* Map modal */
     .map-wrap { position: relative; width: 100%; height: 0; padding-bottom: 65%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18); background: #0e0e14; }
     .map-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .map-wrap #leafletMap { position: absolute; inset: 0; width: 100%; height: 100%; }
 
     @media (max-width: 420px) {
       .btn { font-size: 16px; padding: 14px 16px; }
@@ -133,16 +155,21 @@
     </div>
   </div>
 
-  <!-- Treat modal with embedded map -->
-  <div class="modal" id="treatModal" role="dialog" aria-modal="true" aria-labelledby="treatTitle">
-    <div class="modal-box">
-      <h2 class="modal-title" id="treatTitle">Treats Near You</h2>
-      <div class="map-wrap" aria-label="Halloween Map">
-        <!-- Responsive embed of your custom Google My Maps -->
-        <iframe src="https://www.google.com/maps/d/embed?mid=1SSQ78PUjHgqx0MVho1ZQ1MTlwqDm17r-&ehbc=2E312F" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-      <button class="close" id="treatClose">Close</button>
-    </div>
+  <!-- Treat modal with fullscreen embedded map -->
+  <div class="modal" id="treatModal" role="dialog" aria-modal="true" aria-labelledby="treatTitle" style="padding:0; background:#000;">
+    <h1 class="treats-header">TREATS NEAR YOU</h1>
+    <iframe
+      src="https://www.google.com/maps/d/embed?mid=1SSQ78PUjHgqx0MVho1ZQ1MTlwqDm17r-&ehbc=2E312F"
+      allowfullscreen
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+    ></iframe>
+    <button
+      class="close"
+      id="treatClose"
+      style="position:absolute; top:20px; right:20px; z-index:10; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.3); color:#fff;"
+    >Close</button>
   </div>
 
   <script>
@@ -202,6 +229,45 @@
 
     treatModal.addEventListener('click', (e) => {
       if(e.target === treatModal) treatModal.classList.remove('show');
+    });
+    // Progressive enhancement: try to render a local or hosted KML via Leaflet; fall back to My Maps iframe
+    let kmlInitialized = false;
+    function loadKmlMap() {
+      if (kmlInitialized) return;
+      const wrap = document.querySelector('.map-wrap');
+      if (!wrap) return;
+      const kmlUrl = wrap.dataset.kml || 'map.kml';
+      // Try a HEAD request to see if the KML is reachable (same-origin or CORS-enabled)
+      fetch(kmlUrl, { method: 'HEAD' })
+        .then((resp) => {
+          if (!resp.ok) throw new Error('KML not reachable');
+          const mapEl = document.getElementById('leafletMap');
+          const iframe = document.getElementById('fallbackMap');
+          // Initialize Leaflet
+          const map = L.map(mapEl).setView([35.1376, -106.6881], 13);
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+          // Load KML
+          omnivore.kml(kmlUrl)
+            .on('ready', function () {
+              try { map.fitBounds(this.getBounds()); } catch (e) {}
+            })
+            .addTo(map);
+          // Show Leaflet, hide fallback iframe
+          mapEl.removeAttribute('aria-hidden');
+          iframe.style.display = 'none';
+          kmlInitialized = true;
+        })
+        .catch(() => {
+          // Keep iframe visible as fallback
+        });
+    }
+
+    // When Treat modal opens, attempt to load the KML map once
+    treatBtn.addEventListener('click', () => {
+      // existing code already opens the modal
+      setTimeout(loadKmlMap, 50);
     });
   </script>
 </body>

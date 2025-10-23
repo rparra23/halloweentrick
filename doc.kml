@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Albuquerque Area Halloween Display Tour</name>
+    <description>All the best Halloween Displays in the city and surrounding areas!</description>
+    <NetworkLink>
+      <name>Albuquerque Area Halloween Display Tour</name>
+      <Link>
+        <href>https://www.google.com/maps/d/u/0/kml?mid=1SSQ78PUjHgqx0MVho1ZQ1MTlwqDm17r-</href>
+      </Link>
+    </NetworkLink>
+  </Document>
+</kml>
